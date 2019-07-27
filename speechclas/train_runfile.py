@@ -78,10 +78,9 @@ import numpy as np
 from six.moves import xrange  # pylint: disable=redefined-builtin
 import tensorflow as tf
 
-import models
 from datetime import datetime
 from tensorflow.python.platform import gfile
-from speechclas import paths, config, input_data
+from speechclas import paths, config, input_data, models
 
 FLAGS = None
 
