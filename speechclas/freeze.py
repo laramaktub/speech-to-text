@@ -41,11 +41,12 @@ from __future__ import print_function
 import argparse
 import os.path
 import sys
-
+import os
+import glob
 import tensorflow as tf
 
 from tensorflow.contrib.framework.python.ops import audio_ops as contrib_audio
-from speechclas import input_data, models
+from speechclas import input_data, models, paths
 from tensorflow.python.framework import graph_util
 
 FLAGS = None
@@ -105,75 +106,28 @@ def create_inference_graph(wanted_words, sample_rate, clip_duration_ms,
   tf.nn.softmax(logits, name='labels_softmax')
 
 
-def main(_):
+def main(TFSESSION,TIMESTAMP, CONF):
 
   # Create the model and load its weights.
-  sess = tf.InteractiveSession()
-  create_inference_graph(FLAGS.wanted_words, FLAGS.sample_rate,
-                         FLAGS.clip_duration_ms, FLAGS.clip_stride_ms,
-                         FLAGS.window_size_ms, FLAGS.window_stride_ms,
-                         FLAGS.dct_coefficient_count, FLAGS.model_architecture)
-  models.load_variables_from_checkpoint(sess, FLAGS.start_checkpoint)
+  create_inference_graph(CONF['model_settings']['wanted_words'], CONF['model_settings']['sample_rate'],
+                         CONF['model_settings']['clip_duration_ms'], CONF['audio_processor']['clip_stride_ms'],
+                         CONF['model_settings']['window_size_ms'], CONF['model_settings']['window_stride_ms'],
+                         CONF['model_settings']['dct_coefficient_count'], CONF['training_parameters']['model_architecture'])
+  
+  print (" esto lo pinta ----------------------------------- >>>>> " , max(glob.glob(paths.get_timestamped_dir()+ '/ckpts/conv*'), key=os.path.getmtime)[0])
+  max(glob.glob(paths.get_timestamped_dir()+ '/ckpts/conv*'), key=os.path.getmtime)
+  models.load_variables_from_checkpoint(TFSESSION, CONF['training_parameters']['start_checkpoint'])
 
   # Turn all the variables into inline constants inside the graph and save it.
   frozen_graph_def = graph_util.convert_variables_to_constants(
       sess, sess.graph_def, ['labels_softmax'])
+  print(" donde lo guarda ---> ", get_models_dir()+CONF['training_parameters']['output_file'])
+  print(" como se llama el archivo --->  ", CONF['training_parameters']['output_file'])
   tf.train.write_graph(
       frozen_graph_def,
-      os.path.dirname(FLAGS.output_file),
-      os.path.basename(FLAGS.output_file),
+      os.path.dirname(get_models_dir()+CONF['training_parameters']['output_file']),
+      os.path.basename(CONF['training_parameters']['output_file']),
       as_text=False)
-  tf.logging.info('Saved frozen graph to %s', FLAGS.output_file)
+  tf.logging.info('Saved frozen graph to %s', CONF['training_parameters']['output_file'])
 
 
-if __name__ == '__main__':
-  parser = argparse.ArgumentParser()
-  parser.add_argument(
-      '--sample_rate',
-      type=int,
-      default=16000,
-      help='Expected sample rate of the wavs',)
-  parser.add_argument(
-      '--clip_duration_ms',
-      type=int,
-      default=1000,
-      help='Expected duration in milliseconds of the wavs',)
-  parser.add_argument(
-      '--clip_stride_ms',
-      type=int,
-      default=30,
-      help='How often to run recognition. Useful for models with cache.',)
-  parser.add_argument(
-      '--window_size_ms',
-      type=float,
-      default=30.0,
-      help='How long each spectrogram timeslice is',)
-  parser.add_argument(
-      '--window_stride_ms',
-      type=float,
-      default=10.0,
-      help='How long the stride is between spectrogram timeslices',)
-  parser.add_argument(
-      '--dct_coefficient_count',
-      type=int,
-      default=40,
-      help='How many bins to use for the MFCC fingerprint',)
-  parser.add_argument(
-      '--start_checkpoint',
-      type=str,
-      default='',
-      help='If specified, restore this pretrained model before any training.')
-  parser.add_argument(
-      '--model_architecture',
-      type=str,
-      default='conv',
-      help='What model architecture to use')
-  parser.add_argument(
-      '--wanted_words',
-      type=str,
-      default='yes,no,up,down,left,right,on,off,stop,go',
-      help='Words to use (others will be added to an unknown label)',)
-  parser.add_argument(
-      '--output_file', type=str, help='Where to save the frozen graph.')
-  FLAGS, unparsed = parser.parse_known_args()
-  tf.app.run(main=main, argv=[sys.argv[0]] + unparsed)

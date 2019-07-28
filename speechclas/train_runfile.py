@@ -77,26 +77,27 @@ import sys
 import numpy as np
 from six.moves import xrange  # pylint: disable=redefined-builtin
 import tensorflow as tf
-
+import logging
 from datetime import datetime
 from tensorflow.python.platform import gfile
-from speechclas import paths, config, input_data, models
+from speechclas import paths, config, input_data, models, freeze, utils, model_utils
 
 FLAGS = None
 
 
-def train_fn(TIMESTAMP, CONF):
+def train_fn(TFSESSION,TIMESTAMP, CONF):
   
    
   paths.timestamp = TIMESTAMP
   paths.CONF = CONF
   print(CONF)
 
-  # We want to see all the logging messages for this tutorial.
-  tf.logging.set_verbosity(tf.logging.INFO)
-
-  # Start a new TensorFlow session.
-  sess = tf.InteractiveSession()
+  utils.create_dir_tree()
+  #Activate only if you want to make a backup of the splits used for the training
+  #utils.backup_splits()
+  
+#  logging.set_verbosity(logging.INFO)
+  logging.basicConfig(filename=paths.get_logs_dir()+'/train_info.log',level=logging.DEBUG)
 
   # Begin by making sure we have the training data we need. If you already have
   # training data of your own, use `--data_url= ` on the command line to avoid
@@ -184,7 +185,7 @@ def train_fn(TIMESTAMP, CONF):
     models.load_variables_from_checkpoint(sess, CONF['training_parameters']['start_checkpoint'])
     start_step = global_step.eval(session=sess)
 
-  tf.logging.info('Training from step: %d ', start_step)
+  logging.info('Training from step: %d ', start_step)
 
   # Save graph.pbtxt.
   tf.train.write_graph(sess.graph_def, CONF['training_parameters']['train_dir'],
@@ -223,7 +224,7 @@ def train_fn(TIMESTAMP, CONF):
             dropout_prob: 0.5
         })
     train_writer.add_summary(train_summary, training_step)
-    tf.logging.info('Step #%d: rate %f, accuracy %.1f%%, cross entropy %f' %
+    logging.info('Step #%d: rate %f, accuracy %.1f%%, cross entropy %f' %
                     (training_step, learning_rate_value, train_accuracy * 100,
                      cross_entropy_value))
     is_last_step = (training_step == training_steps_max)
@@ -251,20 +252,20 @@ def train_fn(TIMESTAMP, CONF):
           total_conf_matrix = conf_matrix
         else:
           total_conf_matrix += conf_matrix
-      tf.logging.info('Confusion Matrix:\n %s' % (total_conf_matrix))
-      tf.logging.info('Step %d: Validation accuracy = %.1f%% (N=%d)' %
+      logging.info('Confusion Matrix:\n %s' % (total_conf_matrix))
+      logging.info('Step %d: Validation accuracy = %.1f%% (N=%d)' %
                       (training_step, total_accuracy * 100, set_size))
 
     # Save the model checkpoint periodically.
     if (training_step % CONF['training_parameters']['save_step_interval'] == 0 or
         training_step == training_steps_max):
-      checkpoint_path = os.path.join(CONF['training_parameters']['train_dir'],
+      checkpoint_path = os.path.join( paths.get_checkpoints_dir(),
                                      CONF['training_parameters']['model_architecture'] + '.ckpt')
-      tf.logging.info('Saving to "%s-%d"', checkpoint_path, training_step)
+      logging.info('Saving to "%s-%d"', checkpoint_path, training_step)
       saver.save(sess, checkpoint_path, global_step=training_step)
 
   set_size = audio_processor.set_size('testing')
-  tf.logging.info('set_size=%d', set_size)
+  logging.info('set_size=%d', set_size)
   total_accuracy = 0
   total_conf_matrix = None
   for i in xrange(0, set_size, CONF['training_parameters']['batch_size']):
@@ -283,14 +284,22 @@ def train_fn(TIMESTAMP, CONF):
       total_conf_matrix = conf_matrix
     else:
       total_conf_matrix += conf_matrix
-  tf.logging.info('Confusion Matrix:\n %s' % (total_conf_matrix))
-  tf.logging.info('Final test accuracy = %.1f%% (N=%d)' % (total_accuracy * 100,
+  logging.info('Confusion Matrix:\n %s' % (total_conf_matrix))
+  logging.info('Final test accuracy = %.1f%% (N=%d)' % (total_accuracy * 100,
                                                            set_size))
+  print('Saving data to {} folder.'.format(paths.get_timestamped_dir()))
+
+  print('Saving the configuration ...')
+  model_utils.save_conf(CONF)
+
 
 
 if __name__ == '__main__':
+    # Start a new TensorFlow session.
+    sess = tf.InteractiveSession()
 
     CONF = config.conf_dict()
     timestamp = datetime.now().strftime('%Y-%m-%d_%H%M%S')
 
-    train_fn(TIMESTAMP=timestamp, CONF=CONF)
+    train_fn(TFSESSION=sess, TIMESTAMP=timestamp, CONF=CONF)
+    freeze.main(TFSESSION=sess, TIMESTAMP=timestamp,CONF=CONF)
