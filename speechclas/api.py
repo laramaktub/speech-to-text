@@ -34,7 +34,7 @@ import tensorflow as tf
 from tensorflow.keras.models import load_model
 from tensorflow.keras import backend as K
 
-from speechclas import paths, utils, config
+from speechclas import paths, utils, config, label_wav
 from speechclas.data_utils import load_class_names, load_class_info, mount_nextcloud
 from speechclas.test_utils import predict
 from speechclas.train_runfile import train_fn
@@ -43,7 +43,7 @@ from speechclas.train_runfile import train_fn
 # Mount NextCloud folders (if NextCloud is available)
 try:
     mount_nextcloud('ncplants:/data/dataset_files', paths.get_splits_dir())
-    mount_nextcloud('ncplants:/data/images', paths.get_images_dir())
+    mount_nextcloud('ncplants:/data/images', paths.get_audio_dir())
     #mount_nextcloud('ncplants:/models', paths.get_models_dir())
 except Exception as e:
     print(e)
@@ -53,7 +53,7 @@ loaded = False
 graph, model, conf, class_names, class_info = None, None, None, None, None
 
 # Additional parameters
-allowed_extensions = set(['png', 'jpg', 'jpeg', 'PNG', 'JPG', 'JPEG']) # allow only certain file extensions
+allowed_extensions = set(['wav']) # allow only certain file extensions
 top_K = 5  # number of top classes predictions to return
 
 
@@ -221,36 +221,29 @@ def predict_data(images, merge=True):
     """
     Function to predict an image in binary format
     """
-    if not loaded:
-        load_inference_model()
+    #if not loaded:
+     #   load_inference_model()
     if not isinstance(images, list):
         images = [images]
-
+    print("Llega aqui despues")
     filenames = []
     for image in images:
-        f = tempfile.NamedTemporaryFile(delete=False)
-        f.write(image)
+        print("Llega aqui")
+
+        f = tempfile.NamedTemporaryFile(delete=False,mode="w")
+        print("Llega aqui 1")
+        print(type(image))
+        #f.write(image[0])
+        print("Llega aqui 2")
         f.close()
+        print("Llega aqui 3")
         filenames.append(f.name)
+    print(filenames)
+    print("print file -------------------------------------- > ", images)
+    #label_wav.predict()
 
-    try:
-        with graph.as_default():
-            pred_lab, pred_prob = predict(model=model,
-                                          X=filenames,
-                                          conf=conf,
-                                          top_K=top_K,
-                                          filemode='local',
-                                          merge=merge)
-    except Exception as e:
-        raise e
-    finally:
-        for f in filenames:
-            os.remove(f)
 
-    if merge:
-        pred_lab, pred_prob = np.squeeze(pred_lab), np.squeeze(pred_prob)
-
-    return format_prediction(pred_lab, pred_prob)
+    return 1
 
 
 def format_prediction(labels, probabilities):
