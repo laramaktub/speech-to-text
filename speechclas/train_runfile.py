@@ -191,13 +191,15 @@ def train_fn(TIMESTAMP, CONF):
   logging.info('Training from step: %d ', start_step)
 
   # Save graph.pbtxt.
-  tf.train.write_graph(sess.graph_def, CONF['training_parameters']['train_dir'],
+  tf.train.write_graph(sess.graph_def,paths.get_checkpoints_dir() ,
                        CONF['training_parameters']['model_architecture'] + '.pbtxt')
 
   # Save list of words.
+
   with gfile.GFile(
-      os.path.join(CONF['training_parameters']['train_dir'], CONF['training_parameters']['model_architecture'] + '_labels.txt'),
+      os.path.join(paths.get_checkpoints_dir(), CONF['training_parameters']['model_architecture'] + '_labels.txt'),
       'w') as f:
+    
     f.write('\n'.join(audio_processor.words_list))
 
   # Training loop.
@@ -262,10 +264,10 @@ def train_fn(TIMESTAMP, CONF):
     # Save the model checkpoint periodically.
     if (training_step % CONF['training_parameters']['save_step_interval'] == 0 or
         training_step == training_steps_max):
-      checkpoint_path = os.path.join( paths.get_checkpoints_dir(),
+      checkpoints_path = os.path.join( paths.get_checkpoints_dir(),
                                      CONF['training_parameters']['model_architecture'] + '.ckpt')
-      logging.info('Saving to "%s-%d"', checkpoint_path, training_step)
-      saver.save(sess, checkpoint_path, global_step=training_step)
+      logging.info('Saving to "%s-%d"', checkpoints_path, training_step)
+      saver.save(sess, checkpoints_path, global_step=training_step)
   
   set_size = audio_processor.set_size('testing')
   logging.info('set_size=%d', set_size)

@@ -127,14 +127,10 @@ def generatepb(TIMESTAMP,CONF):
   frozen_graph_def = graph_util.convert_variables_to_constants(
       sess, sess.graph_def, ['labels_softmax'])
 
-  #print(" donde lo guarda ---> ", get_models_dir()+CONF['training_parameters']['output_file'])
-  #print(" como se llama el archivo --->  ", CONF['training_parameters']['output_file'])
   tf.train.write_graph(
       frozen_graph_def,
-      os.path.dirname(paths.get_timestamped_dir()+ "/ckpts/"),
-      os.path.basename("model.pb"),
-#      os.path.dirname(CONF['training_parameters']['output_file']),
- #     os.path.basename(CONF['training_parameters']['output_file']),
+      os.path.dirname(paths.get_checkpoints_dir()),
+      os.path.basename(CONF['train_parameters']['output_file']),
       as_text=False)
   tf.logging.info('Saved frozen graph to %s', CONF['training_parameters']['output_file'])
   sess.close()

@@ -144,11 +144,6 @@ training_parameters:
     help: >
           Save model checkpoint every save_steps
 
-  train_dir:
-    type: "str"
-    value: "/tmp/speech_commands_train"
-    help: >
-          Directory to write event logs and checkpoint
 
   output_file:
     type: "str"
