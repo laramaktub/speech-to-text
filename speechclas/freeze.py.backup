@@ -44,20 +44,17 @@ import sys
 import os
 import glob
 import tensorflow as tf
-from speechclas import paths,config
-from datetime import datetime
 
 from tensorflow.contrib.framework.python.ops import audio_ops as contrib_audio
 from speechclas import input_data, models, paths
 from tensorflow.python.framework import graph_util
 
-CONF = config.conf_dict()
-timestamp = datetime.now().strftime('%Y-%m-%d_%H%M%S')
+FLAGS = None
+
 
 def create_inference_graph(wanted_words, sample_rate, clip_duration_ms,
                            clip_stride_ms, window_size_ms, window_stride_ms,
                            dct_coefficient_count, model_architecture):
-  
   """Creates an audio model with the nodes needed for inference.
 
   Uses the supplied arguments to create a model, and inserts the input and
@@ -109,7 +106,7 @@ def create_inference_graph(wanted_words, sample_rate, clip_duration_ms,
   tf.nn.softmax(logits, name='labels_softmax')
 
 
-def generatepb(TIMESTAMP,CONF):
+def main(TIMESTAMP, CONF):
   sess = tf.InteractiveSession()
   # Create the model and load its weights.
   create_inference_graph(CONF['model_settings']['wanted_words'], CONF['model_settings']['sample_rate'],
@@ -118,10 +115,18 @@ def generatepb(TIMESTAMP,CONF):
                          CONF['model_settings']['dct_coefficient_count'], CONF['training_parameters']['model_architecture'])
   
   
-  
-  lastckpt=max(glob.glob(paths.get_timestamped_dir()+ '/ckpts/*'), key=os.path.getmtime)
-  lastmodel = lastckpt.split(".meta", 1)[0]
-  models.load_variables_from_checkpoint(sess, lastmodel)
+  print(CONF['model_settings']['wanted_words'])
+  print(CONF['model_settings']['sample_rate'])
+  print(CONF['model_settings']['clip_duration_ms'])
+  print(CONF['audio_processor']['clip_stride_ms'])
+  print(CONF['model_settings']['window_size_ms'])
+  print(CONF['model_settings']['window_stride_ms'])
+  print(CONF['model_settings']['dct_coefficient_count'])
+  print(CONF['training_parameters']['model_architecture'])
+
+  #lastckpt=max(glob.glob(paths.get_timestamped_dir()+ '/ckpts/conv*'), key=os.path.getmtime)
+  #lastckpt = lastckpt.split(".meta", 1)[0]
+  models.load_variables_from_checkpoint(sess, "/home/ubuntu/BioWorkFlow/speech/speech-to-text-tf/models/2019-07-28_162456/ckpts/conv.ckpt-20")
   
   # Turn all the variables into inline constants inside the graph and save it.
   frozen_graph_def = graph_util.convert_variables_to_constants(
@@ -131,15 +136,11 @@ def generatepb(TIMESTAMP,CONF):
   #print(" como se llama el archivo --->  ", CONF['training_parameters']['output_file'])
   tf.train.write_graph(
       frozen_graph_def,
-      os.path.dirname(paths.get_timestamped_dir()+ "/ckpts/"),
-      os.path.basename("model.pb"),
+      os.path.dirname("."),
+      os.path.basename("funciona.pb"),
 #      os.path.dirname(CONF['training_parameters']['output_file']),
  #     os.path.basename(CONF['training_parameters']['output_file']),
       as_text=False)
   tf.logging.info('Saved frozen graph to %s', CONF['training_parameters']['output_file'])
 
-
-if __name__ == '__main__':
-    # Start a new TensorFlow session.
-    generatepb(TIMESTAMP=timestamp, CONF=CONF)
 

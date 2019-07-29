@@ -37,8 +37,7 @@ one-second .wav files, each containing one spoken word. This data set is
 collected from https://aiyprojects.withgoogle.com/open_speech_recording, please
 consider contributing to help improve this and other models!
 
-As training progresses, it will print out its accuracy metrics, which should
-rise above 90% by the end. Once it's complete, you can run the freeze script to
+As training progresses, it will print out its accuracy metrics, which shouldrise above 90% by the end. Once it's complete, you can run the freeze script to
 get a binary GraphDef that you can easily deploy on mobile applications.
 
 If you want to train on your own data, you'll need to create .wavs with your
@@ -73,21 +72,25 @@ from __future__ import print_function
 import argparse
 import os.path
 import sys
+import time
 
 import numpy as np
 from six.moves import xrange  # pylint: disable=redefined-builtin
 import tensorflow as tf
 import logging
+from tensorflow.contrib.framework.python.ops import audio_ops as contrib_audio
 from datetime import datetime
 from tensorflow.python.platform import gfile
 from speechclas import paths, config, input_data, models, freeze, utils, model_utils
+from tensorflow.python.framework import graph_util
 
-FLAGS = None
+CONF = config.conf_dict()
+timestamp = datetime.now().strftime('%Y-%m-%d_%H%M%S')
 
 
-def train_fn(TFSESSION,TIMESTAMP, CONF):
+def train_fn(TIMESTAMP, CONF):
   
-   
+  sess = tf.InteractiveSession()
   paths.timestamp = TIMESTAMP
   paths.CONF = CONF
   print(CONF)
@@ -105,7 +108,8 @@ def train_fn(TFSESSION,TIMESTAMP, CONF):
   model_settings = models.prepare_model_settings(
       len(input_data.prepare_words_list(CONF["model_settings"]["wanted_words"].split(','))),
       CONF["model_settings"]["sample_rate"], CONF["model_settings"]["clip_duration_ms"], CONF["model_settings"]["window_size_ms"],
-      CONF["model_settings"]["window_stride_ms"], CONF["model_settings"]["feature_bin_count"])
+      CONF["model_settings"]["window_stride_ms"], CONF['model_settings']['feature_bin_count'])
+  runtime_settings = {'clip_stride_ms': CONF["audio_processor"]["clip_stride_ms"]}
   audio_processor = input_data.AudioProcessor(
       paths.get_audio_url(), paths.get_audio_dir(), CONF["audio_processor"]["silence_percentage"],
       CONF["audio_processor"]["unknown_percentage"],
@@ -263,7 +267,7 @@ def train_fn(TFSESSION,TIMESTAMP, CONF):
                                      CONF['training_parameters']['model_architecture'] + '.ckpt')
       logging.info('Saving to "%s-%d"', checkpoint_path, training_step)
       saver.save(sess, checkpoint_path, global_step=training_step)
-
+  
   set_size = audio_processor.set_size('testing')
   logging.info('set_size=%d', set_size)
   total_accuracy = 0
@@ -291,15 +295,18 @@ def train_fn(TFSESSION,TIMESTAMP, CONF):
 
   print('Saving the configuration ...')
   model_utils.save_conf(CONF)
+  print("Global variables : ", tf.global_variables())
+  tf.reset_default_graph()
+
+  sess.close()
 
 
 
 if __name__ == '__main__':
-    # Start a new TensorFlow session.
-    sess = tf.InteractiveSession()
-
+    
     CONF = config.conf_dict()
     timestamp = datetime.now().strftime('%Y-%m-%d_%H%M%S')
 
-    train_fn(TFSESSION=sess, TIMESTAMP=timestamp, CONF=CONF)
-    freeze.main(TFSESSION=sess, TIMESTAMP=timestamp,CONF=CONF)
+    train_fn(TIMESTAMP=timestamp, CONF=CONF)
+    freeze.generatepb(TIMESTAMP=timestamp, CONF=CONF)
+
