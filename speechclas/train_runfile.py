@@ -109,7 +109,7 @@ def train_fn(TIMESTAMP, CONF):
       len(input_data.prepare_words_list(CONF["model_settings"]["wanted_words"].split(','))),
       CONF["model_settings"]["sample_rate"], CONF["model_settings"]["clip_duration_ms"], CONF["model_settings"]["window_size_ms"],
       CONF["model_settings"]["window_stride_ms"], CONF['model_settings']['feature_bin_count'])
-  runtime_settings = {'clip_stride_ms': CONF["audio_processor"]["clip_stride_ms"]}
+  
   audio_processor = input_data.AudioProcessor(
       paths.get_audio_url(), paths.get_audio_dir(), CONF["audio_processor"]["silence_percentage"],
       CONF["audio_processor"]["unknown_percentage"],
