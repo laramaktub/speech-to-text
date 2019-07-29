@@ -130,7 +130,7 @@ def generatepb(TIMESTAMP,CONF):
   tf.train.write_graph(
       frozen_graph_def,
       os.path.dirname(paths.get_checkpoints_dir()),
-      os.path.basename(CONF['train_parameters']['output_file']),
+      os.path.basename(CONF['training_parameters']['output_file']),
       as_text=False)
   tf.logging.info('Saved frozen graph to %s', CONF['training_parameters']['output_file'])
   sess.close()
