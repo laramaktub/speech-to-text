@@ -230,17 +230,18 @@ def predict_data(images, merge=True):
     for image in images:
         print("Llega aqui")
 
-        f = tempfile.NamedTemporaryFile(delete=False,mode="w")
+        f = tempfile.NamedTemporaryFile(delete=False)
         print("Llega aqui 1")
-        print(type(image))
-        #f.write(image[0])
+        print(dir(image))
+        print(image.values)
+        f.write(str(image).encode())
         print("Llega aqui 2")
         f.close()
         print("Llega aqui 3")
         filenames.append(f.name)
     print(filenames)
     print("print file -------------------------------------- > ", images)
-    #label_wav.predict()
+    label_wav.predict(filenames[0])
 
 
     return 1
