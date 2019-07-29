@@ -137,9 +137,4 @@ def generatepb(TIMESTAMP,CONF):
  #     os.path.basename(CONF['training_parameters']['output_file']),
       as_text=False)
   tf.logging.info('Saved frozen graph to %s', CONF['training_parameters']['output_file'])
-
-
-if __name__ == '__main__':
-    # Start a new TensorFlow session.
-    generatepb(TIMESTAMP=timestamp, CONF=CONF)
-
+  sess.close()

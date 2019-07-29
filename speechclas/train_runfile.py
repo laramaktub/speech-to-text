@@ -297,7 +297,6 @@ def train_fn(TIMESTAMP, CONF):
   tf.reset_default_graph()
   freeze.generatepb(TIMESTAMP=timestamp, CONF=CONF)
 
-  sess.close()
 
 
 
