@@ -99,16 +99,9 @@ def label_wav(wav, labels, graph, input_name, output_name, how_many_labels):
   run_graph(wav_data, labels_list, input_name, output_name, how_many_labels)
 
 
-def predict():
+def predict(files):
   """Entry point for script, converts flags to arguments."""
-  label_wav(files[0], "/tmp/speech_commands_train/conv_labels.txt", graph, "wav_data:0",
-            "labels_softmax:0", 3)
+  label_wav(files[0], "/tmp/speech_commands_train/conv_labels.txt", graph, "wav_data:0","labels_softmax:0", 3)
 
 
-predict()
-
-
---graph=/tmp/my_frozen_graph.pb \
---labels=/tmp/speech_commands_train/conv_labels.txt \
---wav=/tmp/speech_dataset/left/a5d485dc_nohash_0.wav
 
