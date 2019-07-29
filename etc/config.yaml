@@ -78,6 +78,12 @@ model_settings:
     help: >
           How many bins to use for the MFCC fingerprint
 
+  dct_coefficient_count:
+    type: "int"
+    value: 40
+    help: >
+          How many bins to use for the MFCC fingerprint
+
 audio_processor:
 
   silence_percentage:
@@ -104,6 +110,12 @@ audio_processor:
     value: 16000
     help: >
           Expected sample rate of the wavs
+
+  clip_stride_ms:
+    type: "int"
+    value: 30
+    help: >
+         How often to run recognition. Useful for models with cache
 
 
 training_parameters:
@@ -137,6 +149,13 @@ training_parameters:
     value: "/tmp/speech_commands_train"
     help: >
           Directory to write event logs and checkpoint
+
+  output_file:
+    type: "str"
+    value: "model.pb"
+    help: >
+          Model file in pb format
+
 
   model_architecture:
     type: "str"
@@ -183,7 +202,7 @@ training_parameters:
 
   how_many_training_steps:
     type: "str"
-    value: "15000,3000"
+    value: "10,10"
     help: >
           How many training loops to run
 
