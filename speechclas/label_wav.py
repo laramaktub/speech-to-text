@@ -101,12 +101,12 @@ def label_wav(wav, labels, graph, input_name, output_name, how_many_labels):
   with open(wav, 'rb') as wav_file:
     wav_data = wav_file.read()
 
-  run_graph(wav_data, labels_list, input_name, output_name, how_many_labels)
+  return run_graph(wav_data, labels_list, input_name, output_name, how_many_labels)
 
 
 def predict(wav, labels, graph, input_name, output_name, how_many_labels):
   """Entry point for script, converts flags to arguments."""
-  label_wav(wav, labels, graph, input_name, output_name, how_many_labels)
-
+  pred_lab, pred_prob=label_wav(wav, labels, graph, input_name, output_name, how_many_labels)
+  return pred_lab, pred_prob
 
 

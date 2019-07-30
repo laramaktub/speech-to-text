@@ -230,7 +230,8 @@ def predict_data(images, merge=True):
         image['files'].save(thefile)
 
     pred_lab, pred_prob =label_wav.predict(thefile, LABELS_FILE, MODEL_NAME, "wav_data:0","labels_softmax:0", 3)
-
+    print("pred_lab   ", pred_lab)
+    print("pred_prob   ", pred_prob)
     return format_prediction(pred_lab, pred_prob)
 
 
