@@ -39,7 +39,6 @@ from speechclas.data_utils import load_class_names, load_class_info, mount_nextc
 from speechclas.test_utils import predict
 from speechclas.train_runfile import train_fn
 
-
 # Mount NextCloud folders (if NextCloud is available)
 try:
     mount_nextcloud('ncplants:/data/dataset_files', paths.get_splits_dir())
@@ -223,25 +222,16 @@ def predict_data(images, merge=True):
     """
     #if not loaded:
      #   load_inference_model()
-    print(images)
     if not isinstance(images, list):
         images = [images]
-    print("Llega aqui despues")
     filenames = []
     for image in images:
         print(image['files'])
 
-        f = tempfile.NamedTemporaryFile(delete=False)
-        print("Llega aqui 1")
-        print(dir(image['files']))
-        image['files'].save("prueba.wav")
-        print("Llega aqui 2")
-        f.close()
-        print("Llega aqui 3")
-        filenames.append(f.name)
-    print(filenames)
-    print("print file -------------------------------------- > ", images)
-    label_wav.predict("prueba.wav")
+        thename=image['files'].filename
+        image['files'].save("/tmp/"+filename)
+
+    label_wav.predict("/tmp"+filename)
 
 
     return 1

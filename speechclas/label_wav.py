@@ -101,9 +101,7 @@ def label_wav(wav, labels, graph, input_name, output_name, how_many_labels):
 
 def predict(files):
   """Entry point for script, converts flags to arguments."""
-  print(files)
-  print(type(files))
-  label_wav("/tmp/tmpfumsrc5c", "/srv/speech-to-text-tf/models/2019-07-29_191201/ckpts/conv_labels.txt", "/srv/speech-to-text-tf/models/2019-07-29_191201/model.pb", "wav_data:0","labels_softmax:0", 3)
+  label_wav(files, "/srv/speech-to-text-tf/models/2019-07-30_082402/ckpts/conv_labels.txt", "/srv/speech-to-text-tf/models/2019-07-30_082402/model.pb", "wav_data:0","labels_softmax:0", 3)
 
 
 
