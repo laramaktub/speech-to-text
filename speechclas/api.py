@@ -26,6 +26,7 @@ from datetime import datetime
 import pkg_resources
 import builtins
 import re
+import urllib.request
 
 import numpy as np
 import requests
@@ -83,7 +84,6 @@ def load_inference_model():
 
         # Set the checkpoint model to use to make the prediction
         ckpts = os.listdir(paths.get_checkpoints_dir())
-        print("ckpts --> ", ckpts)
         if not ckpts:
             raise BadRequest(
                 """You have no checkpoints in your `./models/{}/ckpts` folder to be used for inference.
@@ -132,12 +132,12 @@ def catch_error(f):
 
 def catch_url_error(url_list):
 
+    url_list=url_list['urls']
     # Error catch: Empty query
     if not url_list:
         raise BadRequest('Empty query')
 
     for i in url_list:
-
         # Error catch: Inexistent url
         try:
             url_type = requests.head(i).headers.get('content-type')
@@ -146,10 +146,9 @@ def catch_url_error(url_list):
             Check you wrote the url address correctly.""")
 
         # Error catch: Wrong formatted urls
-        if url_type.split('/')[0] != 'image':
-            raise BadRequest("""Url image format error:
-            Some urls were not in image format.
-            Check you didn't uploaded a preview of the image rather than the image itself.""")
+        if url_type != 'audio/x-wav':
+            raise BadRequest("""Url wav format error:
+            Some urls were not in wav format.""")
 
 
 def catch_localfile_error(file_list):
@@ -175,18 +174,10 @@ def predict_url(urls, merge=True):
 
     if not loaded:
         load_inference_model()
-    with graph.as_default():
-        pred_lab, pred_prob = predict(model=model,
-                                      X=urls,
-                                      conf=conf,
-                                      top_K=top_K,
-                                      filemode='url',
-                                      merge=merge)
-
-    if merge:
-        pred_lab, pred_prob = np.squeeze(pred_lab), np.squeeze(pred_prob)
-
+    urllib.request.urlretrieve(urls['urls'][0], '/tmp/file.wav')
+    pred_lab, pred_prob =label_wav.predict('/tmp/file.wav', LABELS_FILE, MODEL_NAME, "wav_data:0","labels_softmax:0", 3)
     return format_prediction(pred_lab, pred_prob)
+
 
 
 @catch_error
@@ -213,21 +204,20 @@ def predict_file(filenames, merge=True):
 
 
 @catch_error
-def predict_data(images, merge=True):
+def predict_data(audios, merge=True):
     """
-    Function to predict an image in binary format
+    Function to predict an audio file
     """
     if not loaded:
         load_inference_model()
-    if not isinstance(images, list):
-        images = [images]
+    if not isinstance(audios, list):
+        audios = [audios]
     filenames = []
-    for image in images:
-        print(image['files'])
+    for audio in audios:
 
-        thename=image['files'].filename
+        thename=audio['files'].filename
         thefile="/tmp/"+thename
-        image['files'].save(thefile)
+        audio['files'].save(thefile)
 
     pred_lab, pred_prob =label_wav.predict(thefile, LABELS_FILE, MODEL_NAME, "wav_data:0","labels_softmax:0", 3)
     return format_prediction(pred_lab, pred_prob)
@@ -245,12 +235,9 @@ def format_prediction(labels, probabilities):
 
         pred = {
             "label": name,
-            "probability": float(prob),
-            "info": {
-                "links": {'Google images': image_link(name),
-                          'Wikipedia': wikipedia_link(name)}
-            },
-        }
+            "probability": float(prob)
+            }
+        
         d["predictions"].append(pred)
     return d
 
