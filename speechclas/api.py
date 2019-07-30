@@ -230,8 +230,6 @@ def predict_data(images, merge=True):
         image['files'].save(thefile)
 
     pred_lab, pred_prob =label_wav.predict(thefile, LABELS_FILE, MODEL_NAME, "wav_data:0","labels_softmax:0", 3)
-    print("pred_lab   ", pred_lab)
-    print("pred_prob   ", pred_prob)
     return format_prediction(pred_lab, pred_prob)
 
 
@@ -241,18 +239,16 @@ def format_prediction(labels, probabilities):
         "status": "ok",
          "predictions": [],
     }
-
+    class_names=conf["model_settings"]["wanted_words"]
     for label_id, prob in zip(labels, probabilities):
-        name = class_names[label_id]
+        name = label_id
 
         pred = {
-            "label_id": int(label_id),
             "label": name,
             "probability": float(prob),
             "info": {
                 "links": {'Google images': image_link(name),
-                          'Wikipedia': wikipedia_link(name)},
-                'metadata': class_info[label_id],
+                          'Wikipedia': wikipedia_link(name)}
             },
         }
         d["predictions"].append(pred)
