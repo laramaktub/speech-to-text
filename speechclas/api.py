@@ -83,6 +83,7 @@ def load_inference_model():
 
         # Set the checkpoint model to use to make the prediction
         ckpts = os.listdir(paths.get_checkpoints_dir())
+        print("ckpts --> ", ckpts)
         if not ckpts:
             raise BadRequest(
                 """You have no checkpoints in your `./models/{}/ckpts` folder to be used for inference.
@@ -106,8 +107,8 @@ def load_inference_model():
 
             # Load the class names and info
             ckpts_dir = paths.get_checkpoints_dir()
-            model_path=  os.path.join(ckpts_dir, MODEL_NAME )
-            labels_path=  os.path.join(ckpts_dir, LABELS_FILE )
+            MODEL_NAME=  os.path.join(ckpts_dir, MODEL_NAME )
+            LABELS_FILE=  os.path.join(ckpts_dir, LABELS_FILE )
             
 
             # Load training configuration

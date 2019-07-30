@@ -99,9 +99,9 @@ def label_wav(wav, labels, graph, input_name, output_name, how_many_labels):
   run_graph(wav_data, labels_list, input_name, output_name, how_many_labels)
 
 
-def predict(wav_data, labels_list, input_name, output_name, how_many_labels):
+def predict(wav, labels, graph, input_name, output_name, how_many_labels):
   """Entry point for script, converts flags to arguments."""
-  label_wav(wav_data, labels_list, input_name, output_name, how_many_labels)
+  label_wav(wav, labels, graph, input_name, output_name, how_many_labels)
 
 
 
