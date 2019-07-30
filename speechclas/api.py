@@ -231,7 +231,7 @@ def predict_data(images, merge=True):
         thename=image['files'].filename
         image['files'].save("/tmp/"+thename)
 
-    label_wav.predict("/tmp"+thename)
+    label_wav.predict("/tmp/"+thename)
 
 
     return 1
