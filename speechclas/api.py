@@ -223,25 +223,25 @@ def predict_data(images, merge=True):
     """
     #if not loaded:
      #   load_inference_model()
+    print(images)
     if not isinstance(images, list):
         images = [images]
     print("Llega aqui despues")
     filenames = []
     for image in images:
-        print("Llega aqui")
+        print(image['files'])
 
         f = tempfile.NamedTemporaryFile(delete=False)
         print("Llega aqui 1")
-        print(dir(image))
-        print(image.values)
-        f.write(str(image).encode())
+        print(dir(image['files']))
+        image['files'].save("prueba.wav")
         print("Llega aqui 2")
         f.close()
         print("Llega aqui 3")
         filenames.append(f.name)
     print(filenames)
     print("print file -------------------------------------- > ", images)
-    label_wav.predict(filenames[0])
+    label_wav.predict("prueba.wav")
 
 
     return 1
