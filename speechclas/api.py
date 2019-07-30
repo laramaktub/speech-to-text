@@ -229,16 +229,10 @@ def predict_data(images, merge=True):
         thefile="/tmp/"+thename
         image['files'].save(thefile)
 
-    label_wav.predict(thefile, LABELS_FILE, MODEL_NAME, "wav_data:0","labels_softmax:0", 3)
+    pred_lab, pred_prob =label_wav.predict(thefile, LABELS_FILE, MODEL_NAME, "wav_data:0","labels_softmax:0", 3)
 
+    return format_prediction(pred_lab, pred_prob)
 
-
-
-
-
-
-
-    return 1
 
 
 def format_prediction(labels, probabilities):

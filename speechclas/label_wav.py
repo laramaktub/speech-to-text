@@ -33,6 +33,7 @@ from __future__ import print_function
 
 import argparse
 import sys
+import numpy as np
 
 import tensorflow as tf
 
@@ -69,12 +70,16 @@ def run_graph(wav_data, labels, input_layer_name, output_layer_name,
 
     # Sort to show labels in order of confidence
     top_k = predictions.argsort()[-num_top_predictions:][::-1]
-    for node_id in top_k:
-      human_string = labels[node_id]
-      score = predictions[node_id]
-      print('%s (score = %.5f)' % (human_string, score))
+    pred_prob = []
+    pred_lab = []
+    
+    for num in range(num_top_predictions):
+      pred_lab.append(labels[top_k[num]])
+      pred_prob.append(predictions[top_k[num]])
 
-    return 0
+
+
+    return np.asarray(pred_lab), np.asarray(pred_prob)
 
 
 def label_wav(wav, labels, graph, input_name, output_name, how_many_labels):
