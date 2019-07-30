@@ -166,7 +166,7 @@ training_parameters:
 
   summaries_dir:
     type: "str"
-    value: "/tmp/retrain_logs"
+    value: "logs"
     help: >
           Where to save summary logs for TensorBoard
 
