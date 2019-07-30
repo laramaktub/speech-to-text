@@ -65,7 +65,7 @@ def load_inference_model():
     If several checkpoints are available in `./models/[timestamp]/ckpts` it will load
     `.models/[timestamp]/ckpts/final_model.h5` or the last checkpoint if `final_model.h5` is not available.
     """
-    global loaded, graph, model, conf, class_names, class_info
+    global loaded, conf, MODEL_NAME, LABELS_FILE
 
     # Set the timestamp
     timestamps = next(os.walk(paths.get_models_dir()))[1]
@@ -88,37 +88,33 @@ def load_inference_model():
                 """You have no checkpoints in your `./models/{}/ckpts` folder to be used for inference.
                 Therefore the API can only be used for training.""".format(TIMESTAMP))
         else:
-            if 'final_model.h5' in ckpts:
-                MODEL_NAME = 'final_model.h5'
+            if 'model.pb' in ckpts:
+                MODEL_NAME = 'model.pb'
             else:
-                MODEL_NAME = sorted([name for name in ckpts if name.endswith('*.h5')])[-1]
+                MODEL_NAME = sorted([name for name in ckpts if name.endswith('*.pb')])[-1]
             print('Using MODEL_NAME={}'.format(MODEL_NAME))
+
+            if 'conv_labels.txt' in ckpts:
+                LABELS_FILE = 'conv_labels.txt'
+            else:
+                LABELS_FILE = sorted([name for name in ckpts if name.endswith('*.txt')])[-1]
+            print('Using LABELS_FILE={}'.format(LABELS_FILE))
+
 
             # Clear the previous loaded model
             K.clear_session()
 
             # Load the class names and info
-            splits_dir = paths.get_ts_splits_dir()
-            class_names = load_class_names(splits_dir=splits_dir)
-            class_info = None
-            if 'info.txt' in os.listdir(splits_dir):
-                class_info = load_class_info(splits_dir=splits_dir)
-                if len(class_info) != len(class_names):
-                    warnings.warn("""The 'classes.txt' file has a different length than the 'info.txt' file.
-                    If a class has no information whatsoever you should leave that classes row empty or put a '-' symbol.
-                    The API will run with no info until this is solved.""")
-                    class_info = None
-            if class_info is None:
-                class_info = ['' for _ in range(len(class_names))]
+            ckpts_dir = paths.get_checkpoints_dir()
+            model_path=  os.path.join(ckpts_dir, MODEL_NAME )
+            labels_path=  os.path.join(ckpts_dir, LABELS_FILE )
+            
 
             # Load training configuration
             conf_path = os.path.join(paths.get_conf_dir(), 'conf.json')
             with open(conf_path) as f:
                 conf = json.load(f)
 
-            # Load the model
-            model = load_model(os.path.join(paths.get_checkpoints_dir(), MODEL_NAME), custom_objects=utils.get_custom_objects())
-            graph = tf.get_default_graph()
 
     # Set the model as loaded
     loaded = True
@@ -220,8 +216,8 @@ def predict_data(images, merge=True):
     """
     Function to predict an image in binary format
     """
-    #if not loaded:
-     #   load_inference_model()
+    if not loaded:
+        load_inference_model()
     if not isinstance(images, list):
         images = [images]
     filenames = []
@@ -229,9 +225,16 @@ def predict_data(images, merge=True):
         print(image['files'])
 
         thename=image['files'].filename
-        image['files'].save("/tmp/"+thename)
+        thefile="/tmp/"+thename
+        image['files'].save(thefile)
 
-    label_wav.predict("/tmp/"+thename)
+    label_wav.predict(thefile, LABELS_FILE, MODEL_NAME, "wav_data:0","labels_softmax:0", 3)
+
+
+
+
+
+
 
 
     return 1
